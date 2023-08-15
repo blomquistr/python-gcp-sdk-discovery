@@ -2,6 +2,13 @@
 
 A repo to hold the code from the [Python quick start for the Google Python SDK](https://developers.google.com/docs/api/quickstart/python).
 
+## Discovery Links
+
+- [Google Python API docs landing page](https://cloud.google.com/python/docs/)
+- [Google Python Auth client](https://github.com/googleapis/google-auth-library-python)
+- [Google Python container client (the one for Kubernetes)](https://github.com/googleapis/python-container)
+- [Google Python quickstart exercise](https://developers.google.com/docs/api/quickstart/python)
+
 ## Setup - Enabling the Oauth Scopes for GCP
 
 ```text/html
