@@ -107,10 +107,12 @@ def doit(project_id: str = None, location: str = "-", cluster_name: str = None) 
 
     if not project_id:
         project_id = default_project_id
+    client = container_v1.ClusterManagerClient(credentials=credentials)
 
     # Here's a sample call to validate that we successfully did the thing
+    project_id = "rcbtestk8sauth"
+    location = "-"
     list_cluster_parent_string = f"projects/{project_id}/locations/{location}"
-    client = container_v1.ClusterManagerClient(credentials=credentials)
     request = container_v1.ListClustersRequest(parent=list_cluster_parent_string)
     client.list_clusters(request=request)
 
@@ -129,6 +131,14 @@ def doit(project_id: str = None, location: str = "-", cluster_name: str = None) 
     )
     get_cluster_request = container_v1.GetClusterRequest(name=get_cluster_name_string)
     client.get_cluster(request=get_cluster_request)
+
+    # Doesn't work - TODO: figure out why?
+    get_json_web_keys_string = (
+        f"projects/{project_id}/locations/{location}/clusters/{cluster_name}"
+    )
+    request = container_v1.GetJSONWebKeysRequest()
+    request.parent = get_json_web_keys_string
+    client.get_json_web_keys(request=request)
 
 
 # A little test for our two methods, to do some BS work against the clusters
