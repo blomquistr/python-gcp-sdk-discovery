@@ -1,12 +1,13 @@
 import os
 
+from typing import Tuple, Optional
+
 from google.auth import default as google_auth_default
-from google.oauth2.credentials import Credentials
+from google.auth.credentials import Credentials as GoogleCredentials
+from google.oauth2.credentials import Credentials as Oauth2Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from google.cloud import (
-    containerv1,
-)  # this is just a demo call for the GCP SDK, replace with Containers
+from google.cloud import container_v1
 
 KCS_SOURCE_DIR = os.path.expanduser("~/.kcs")
 
@@ -46,7 +47,7 @@ def login_to_gcp_oauth2():
     # Unlike in the Auth demo we'll store the creds for the KCS in the KCS
     # user directory otherwise, this flow will be the saem - we'll use
     if os.path.exists(KCS_GCP_TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(
+        creds = Oauth2Credentials.from_authorized_user_file(
             KCS_GCP_TOKEN_PATH,
             SCOPES,
         )
@@ -67,7 +68,9 @@ def login_to_gcp_oauth2():
 
 # A sample of logging in via the ADC grant pattern; this would be the way
 # local users would authenticate in GCP with the k8s-cloud-system CLI.
-def login_to_gcp_adc(google_application_credentials: str = None):
+def login_to_gcp_adc(
+    google_application_credentials: str = None,
+) -> Tuple[~GoogleCredentials, Optional[str]]:
     """
     Snippet demonstrating basic auth for the ADC grant - this will be the
     default pattern that end-users of the KCS will want to use to log in,
@@ -94,9 +97,38 @@ def login_to_gcp_adc(google_application_credentials: str = None):
     # authenticate with GCP.
     credentials, projectId = google_auth_default()
 
+
+def doit(project_id: str = None, location: str = "-", cluster_name: str = None) -> None:
+    """
+    Some silly work to demonstrate that our code is working
+    """
+
+    credentials, default_project_id = login_to_gcp_adc()
+
+    if not project_id:
+        project_id = default_project_id
+
     # Here's a sample call to validate that we successfully did the thing
-    client = containerv1.ClusterManagerClient(credentials=credentials)
-    client.list_clusters(projectId)
+    list_cluster_parent_string = f"projects/{project_id}/locations/{location}"
+    client = container_v1.ClusterManagerClient(credentials=credentials)
+    request = container_v1.ListClustersRequest(parent=list_cluster_parent_string)
+    client.list_clusters(request=request)
+
+    if not cluster_name:
+        cluster_name = "demo-auth-cluster"
+    server_config_name_string = (
+        f"projects/{project_id}/locations/{location}/name/{cluster_name}"
+    )
+    server_config_request = container_v1.GetServerConfigRequest(
+        name=server_config_name_string
+    )
+    client.get_server_config(request=server_config_request)
+
+    get_cluster_name_string = (
+        f"projects/{project_id}/locations/{location}/clusters/{cluster_name}"
+    )
+    get_cluster_request = container_v1.GetClusterRequest(name=get_cluster_name_string)
+    client.get_cluster(request=get_cluster_request)
 
 
 # A little test for our two methods, to do some BS work against the clusters
